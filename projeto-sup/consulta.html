@@ -86,11 +86,25 @@
     function fmt(iso){ if(!iso) return ''; const d=new Date(iso); return isNaN(d)? iso : d.toLocaleString('pt-BR'); }
     function htmlEscape(s=''){ return (s+'').replace(/[&<>\"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m])); }
 
-    // Helpers locais para organismo (CNPJ + extração de Notas)
+    // === Helpers extras (v0.5) ===
     function formatCNPJ(raw=''){
       const d = (raw||'').replace(/\D/g,'').slice(0,14);
       return d.length===14 ? d.slice(0,2)+'.'+d.slice(2,5)+'.'+d.slice(5,8)+'/'+d.slice(8,12)+'-'+d.slice(12) : (raw||'');
     }
+    function fmtISODateToBR(isoOrYmd=''){
+      if(!isoOrYmd) return '';
+      if(/^\d{4}-\d{2}-\d{2}/.test(isoOrYmd)){
+        const [y,m,d] = isoOrYmd.split('-');
+        return `${d}/${m}/${y}`;
+      }
+      const d = new Date(isoOrYmd);
+      return isNaN(d) ? isoOrYmd : d.toLocaleDateString('pt-BR');
+    }
+    function safeLink(url){
+      try{ const u = new URL(url); return `<a href="${htmlEscape(u.toString())}" target="_blank" rel="noopener">Abrir</a>`; }
+      catch{ return htmlEscape(url||''); }
+    }
+    // Fallback: extrai Organismo/CNPJ/Descrição das notas caso não estejam estruturados
     function extractMetaFromNotes(notes=''){
       const lines = (notes||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
       const meta = { organismoNome:'', organismoCNPJ:'', descricao:'' };
@@ -120,13 +134,20 @@
       empty.style.display='none';
       const p = r.protocolo||{};
 
-      // Lê campos estruturados; se não houver, tenta extrair das Notas
+      // Metadados do organismo (estruturados ou extraídos das Notas)
       const fb = extractMetaFromNotes(r.notes||'');
       const organismoNome = r.organismoNome || fb.organismoNome || '';
       const organismoCNPJ = r.organismoCNPJ || fb.organismoCNPJ || '';
       const descricao     = r.descricao     || fb.descricao     || '';
 
-      // Histórico em linhas (data opcional no início da linha)
+      // Campos adicionais (v0.5)
+      const tipoDemanda = r.tipoDemanda || '';
+      const prioridade  = r.prioridade  || '';
+      const responsavel = r.responsavel || '';
+      const prazo       = fmtISODateToBR(r.prazo || '');
+      const anexoUrl    = r.anexoUrl || '';
+
+      // Histórico em linhas — data opcional no início
       const lines = (r.notes||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
       const reDate = /^(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{4}[\-\/]\d{2}[\-\/]\d{2})\s?[–—-]?\s?/;
       const histHTML = lines.map(line=>{
@@ -150,11 +171,17 @@
             <label>Status</label><div>${statusPill(r.status)}</div>
             <label>Atualizado em</label><div>${fmt(r.updatedAt)}</div>
 
-            <label>Organismo</label><div>${htmlEscape(organismoNome)||'<span class="muted">—</span>'}</div>
-            <label>CNPJ</label><div>${htmlEscape(formatCNPJ(organismoCNPJ))||'<span class="muted">—</span>'}</div>
+            <label>Organismo</label><div>${htmlEscape(organismoNome) || '<span class="muted">—</span>'}</div>
+            <label>CNPJ</label><div>${htmlEscape(formatCNPJ(organismoCNPJ)) || '<span class="muted">—</span>'}</div>
 
             <label>Descrição</label>
             <div class="notes">${(descricao || '<span class="muted">—</span>').replace(/</g,'&lt;')}</div>
+
+            <label>Tipo da demanda</label><div>${htmlEscape(tipoDemanda) || '<span class="muted">—</span>'}</div>
+            <label>Prioridade</label><div>${htmlEscape(prioridade) || '<span class="muted">—</span>'}</div>
+            <label>Responsável</label><div>${htmlEscape(responsavel) || '<span class="muted">—</span>'}</div>
+            <label>Prazo</label><div>${prazo || '<span class="muted">—</span>'}</div>
+            <label>Anexo</label><div>${anexoUrl ? safeLink(anexoUrl) : '<span class="muted">—</span>'}</div>
 
             <label>Histórico</label>
             <div class="notes">${histHTML}</div>
