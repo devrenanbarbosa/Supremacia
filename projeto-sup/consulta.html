@@ -68,15 +68,6 @@
 
     <div id="resultado" class="result"></div>
 
-    <!-- QR Code da consulta (opcional) -->
-    <div id="qrBox" class="center" style="display:none;flex-direction:column">
-      <div class="card" style="text-align:center">
-        <div class="muted" style="margin-bottom:8px">QR Code da consulta (requer internet para carregar a imagem do QR):</div>
-        <img id="qrImg" alt="QR Code" style="width:220px;height:220px;image-rendering:pixelated;border-radius:8px;border:1px solid var(--border)" />
-        <div class="muted" style="margin-top:8px" id="qrLink"></div>
-      </div>
-    </div>
-
     <div class="center" id="vazio">
       <span>Digite o número e a chave para consultar.</span>
     </div>
@@ -93,7 +84,24 @@
 
     function statusPill(s){ const map={OK:'ok',PENDENTE:'warn',IRREGULAR:'bad'}; const cls=map[s]||'ok'; return `<span class="pill ${cls}">${s||'OK'}</span>`; }
     function fmt(iso){ if(!iso) return ''; const d=new Date(iso); return isNaN(d)? iso : d.toLocaleString('pt-BR'); }
-    function htmlEscape(s=''){ return (s+'').replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m])); }
+    function htmlEscape(s=''){ return (s+'').replace(/[&<>\"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m])); }
+
+    // Helpers locais para organismo (CNPJ + extração de Notas)
+    function formatCNPJ(raw=''){
+      const d = (raw||'').replace(/\D/g,'').slice(0,14);
+      return d.length===14 ? d.slice(0,2)+'.'+d.slice(2,5)+'.'+d.slice(5,8)+'/'+d.slice(8,12)+'-'+d.slice(12) : (raw||'');
+    }
+    function extractMetaFromNotes(notes=''){
+      const lines = (notes||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      const meta = { organismoNome:'', organismoCNPJ:'', descricao:'' };
+      for(const line of lines){
+        const l = line.toLowerCase();
+        if(!meta.organismoNome && l.startsWith('organismo:')) meta.organismoNome = line.split(':').slice(1).join(':').trim();
+        if(!meta.organismoCNPJ && l.startsWith('cnpj:')) meta.organismoCNPJ = line.split(':').slice(1).join(':').trim();
+        if(!meta.descricao && (l.startsWith('descrição:') || l.startsWith('descricao:'))) meta.descricao = line.split(':').slice(1).join(':').trim();
+      }
+      return meta;
+    }
 
     function findProto(numero, chave){
       const data = loadData();
@@ -108,12 +116,30 @@
     function renderResult(r){
       const box = $('#resultado');
       const empty = $('#vazio');
-      const qrBox = document.getElementById('qrBox');
-      if(!r){ box.innerHTML = ''; empty.style.display='flex'; if(qrBox) qrBox.style.display='none'; return; }
+      if(!r){ box.innerHTML = ''; empty.style.display='flex'; return; }
       empty.style.display='none';
       const p = r.protocolo||{};
 
-      // Monta HTML principal
+      // Lê campos estruturados; se não houver, tenta extrair das Notas
+      const fb = extractMetaFromNotes(r.notes||'');
+      const organismoNome = r.organismoNome || fb.organismoNome || '';
+      const organismoCNPJ = r.organismoCNPJ || fb.organismoCNPJ || '';
+      const descricao     = r.descricao     || fb.descricao     || '';
+
+      // Histórico em linhas (data opcional no início da linha)
+      const lines = (r.notes||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      const reDate = /^(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{4}[\-\/]\d{2}[\-\/]\d{2})\s?[–—-]?\s?/;
+      const histHTML = lines.map(line=>{
+        const m = line.match(reDate);
+        const date = m ? m[1] : '';
+        const rest = m ? line.replace(reDate,'') : line;
+        const pill = (r.status==='OK'?'ok':(r.status==='IRREGULAR'?'bad':'warn'));
+        return `<div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:start">
+                  <div><span class="pill ${pill}">${date||''}</span></div>
+                  <div>${rest.replace(/</g,'&lt;')}</div>
+                </div>`;
+      }).join('') || '<div class="muted">Sem histórico informado.</div>';
+
       box.innerHTML = `
         <div class="card">
           <div class="title">${htmlEscape(r.name||'Protocolo')}</div>
@@ -123,72 +149,26 @@
             <label>Chave</label><div><code>${htmlEscape(p.chave||'')}</code></div>
             <label>Status</label><div>${statusPill(r.status)}</div>
             <label>Atualizado em</label><div>${fmt(r.updatedAt)}</div>
-            <label>Categoria</label><div>${htmlEscape(r.category||'')}</div>
-            <label>Notas / Movimentações</label><div class="notes">${(r.notes||'').replace(/</g,'&lt;')}</div>
+
+            <label>Organismo</label><div>${htmlEscape(organismoNome)||'<span class="muted">—</span>'}</div>
+            <label>CNPJ</label><div>${htmlEscape(formatCNPJ(organismoCNPJ))||'<span class="muted">—</span>'}</div>
+
+            <label>Descrição</label>
+            <div class="notes">${(descricao || '<span class="muted">—</span>').replace(/</g,'&lt;')}</div>
+
+            <label>Histórico</label>
+            <div class="notes">${histHTML}</div>
           </div>
           <div class="actions">
-            <button class="button" id="btnImprimir">Imprimir</button>
+            <button class="button" id="btnImprimir">Imprimir / PDF</button>
             <button class="button ghost" id="btnCopiarNumero">Copiar nº</button>
             <button class="button ghost" id="btnCopiarChave">Copiar chave</button>
           </div>
         </div>`;
 
-      // Botões padrão
-      $('#btnImprimir').onclick    = ()=> window.print();
+      $('#btnImprimir').onclick     = ()=> window.print();
       $('#btnCopiarNumero').onclick = ()=> navigator.clipboard?.writeText(p.numero||'');
       $('#btnCopiarChave').onclick  = ()=> navigator.clipboard?.writeText(p.chave||'');
-
-      // === Histórico formatado (cada linha com data opcional) ===
-      const notesEl = box.querySelector('.notes');
-      if (notesEl) {
-        const lines = (r.notes||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-        const reDate = /^(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{4}[\-\/]\d{2}[\-\/]\d{2})\s?[–—-]?\s?/;
-        const html = lines.map(line=>{
-          const m = line.match(reDate);
-          const date = m? m[1] : '';
-          const rest = m? line.replace(reDate,'') : line;
-          const pill = (r.status==='OK'?'ok':(r.status==='IRREGULAR'?'bad':'warn'));
-          return '<div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:start">'
-               + '<div><span class="pill '+pill+'">'+(date||'')+'</span></div>'
-               + '<div>'+rest.replace(/</g,'&lt;')+'</div>'
-               + '</div>';
-        }).join('') || '<div class="muted">Sem histórico informado.</div>';
-        notesEl.innerHTML = html;
-        const labels = box.querySelectorAll('.kv label');
-        labels.forEach(l=>{ if(l.textContent.includes('Notas')) l.textContent='Histórico'; });
-      }
-
-      // === Botão QR Code ===
-      const actions = box.querySelector('.actions');
-      if (actions && !actions.querySelector('#btnMostrarQR')) {
-        const b = document.createElement('button');
-        b.className = 'button';
-        b.id = 'btnMostrarQR';
-        b.textContent = 'Mostrar QR Code';
-        actions.appendChild(b);
-        b.onclick = ()=> showQR();
-      }
-    }
-
-    function buildShareURL(){
-      const url = new URL(location.href);
-      const n = document.getElementById('numero').value.trim();
-      const k = document.getElementById('chave').value.trim();
-      if(n) url.searchParams.set('n', n); else url.searchParams.delete('n');
-      if(k) url.searchParams.set('k', k); else url.searchParams.delete('k');
-      return url.toString();
-    }
-
-    function showQR(){
-      const link = buildShareURL();
-      const qrImg = document.getElementById('qrImg');
-      const qrBox = document.getElementById('qrBox');
-      if(!qrImg || !qrBox){ alert('Seção de QR Code não encontrada.'); return; }
-      const qrApi = 'https://chart.googleapis.com/chart?cht=qr&chs=240x240&choe=UTF-8&chl=' + encodeURIComponent(link);
-      qrImg.onerror = ()=>{ qrBox.style.display='block'; qrImg.alt = 'Falha ao carregar QR. Verifique a conexão.'; };
-      qrImg.src = qrApi;
-      const linkEl = document.getElementById('qrLink'); if(linkEl) linkEl.textContent = link;
-      qrBox.style.display='block';
     }
 
     function doSearch(){

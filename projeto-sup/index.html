@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PROJETO SUP — Catálogo (HTML)</title>
+  <title>PROJETO SUP — Catálogo (v0.4)</title>
   <style>
     :root { --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#22d3ee; --accent-2:#10b981; --danger:#ef4444; --border:#1f2937; }
     html, body { height:100%; }
-    body { margin:0; background:linear-gradient(180deg,#0b1020,var(--bg)); color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
+    body { margin:0; background:linear-gradient(180deg,#0b1020,var(--bg)); color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans"; }
     .container { max-width:1200px; margin:32px auto; padding:0 16px; }
     header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
     h1 { font-size:clamp(20px,3vw,28px); margin:0; letter-spacing:.3px; display:flex; align-items:center; gap:10px; }
@@ -19,7 +19,7 @@
     .tab.active { background:linear-gradient(135deg,#111827,#0b1220); box-shadow:inset 0 0 0 1px rgba(34,211,238,.2); }
     .toolbar { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; }
     .toolbar .left, .toolbar .right { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    input[type="text"], select { background:#0b1220; border:1px solid var(--border); color:var(--text); border-radius:12px; padding:10px 12px; outline:none; }
+    input[type="text"], input[type="search"], select { background:#0b1220; border:1px solid var(--border); color:var(--text); border-radius:12px; padding:10px 12px; outline:none; }
     input[type="file"] { color:var(--muted); }
     .button { cursor:pointer; border:1px solid var(--border); background:#0b1220; color:var(--text); padding:10px 14px; border-radius:12px; font-weight:600; transition:transform .05s ease, box-shadow .2s; }
     .button:hover { box-shadow:0 0 0 2px rgba(34,211,238,.2) inset; }
@@ -37,7 +37,7 @@
     .pill.bad { background:rgba(239,68,68,.15); color:#fda4a4; }
     .actions { display:flex; gap:6px; }
     .footer { margin-top:14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
-    dialog { width:min(780px,98vw); border:none; border-radius:18px; padding:0; background:#0b1220; color:var(--text); box-shadow:0 30px 80px rgba(0,0,0,.6); }
+    dialog { width:min(860px,98vw); border:none; border-radius:18px; padding:0; background:#0b1220; color:var(--text); box-shadow:0 30px 80px rgba(0,0,0,.6); }
     dialog::backdrop { background:rgba(0,0,0,.55); backdrop-filter:blur(2px); }
     .modal-head { display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--border); }
     .modal-body { padding:16px 18px; }
@@ -49,6 +49,7 @@
     .inline { display:flex; gap:8px; align-items:center; }
     .hint { font-size:12px; color:var(--muted); }
     .badge-mini { font-size:11px; color:#061018; background:var(--accent); padding:2px 6px; border-radius:999px; font-weight:800; }
+    .tiny { font-size:11px; color:var(--muted); }
   </style>
 </head>
 <body>
@@ -57,8 +58,8 @@
       <div style="display:flex; align-items:center; gap:10px">
         <div class="logo">SUP</div>
         <div>
-          <h1>PROJETO SUP — Catálogo <span class="badge">HTML • LocalStorage • v0.3</span></h1>
-          <div style="font-size:13px;color:var(--muted);margin-top:6px;max-width:80ch">Evolução com <strong>campos dedicados de Protocolo</strong> (Número e Chave de Consulta Pública).</div>
+          <h1>PROJETO SUP — Catálogo <span class="badge">HTML • LocalStorage • v0.4</span></h1>
+          <div style="font-size:13px;color:var(--muted);margin-top:6px;max-width:80ch">Evolução: campos de <strong>Organismo</strong>, <strong>CNPJ</strong> e <strong>Descrição</strong> integrados ao cadastro e exportação.</div>
         </div>
       </div>
       <button class="button primary" id="btn-add">+ Novo registro</button>
@@ -77,7 +78,7 @@
 
       <div class="toolbar" style="margin-top:10px">
         <div class="left">
-          <input type="text" id="search" placeholder="Pesquisar (id, nome, categoria, status, notas)" />
+          <input type="search" id="search" placeholder="Pesquisar (id, nome, organismo, cnpj, categoria, status, notas)" />
           <select id="statusFilter" title="Filtrar status">
             <option value="">Status: todos</option>
             <option value="OK">OK</option>
@@ -100,11 +101,13 @@
             <tr>
               <th class="sortable" data-key="id">ID <span>↕</span></th>
               <th class="sortable" data-key="name">Nome <span>↕</span></th>
+              <th class="sortable" data-key="organismoNome">Organismo <span>↕</span></th>
+              <th>CNPJ</th>
               <th class="sortable" data-key="category">Categoria <span>↕</span></th>
               <th class="sortable" data-key="status">Status <span>↕</span></th>
               <th class="sortable" data-key="updatedAt">Atualizado em <span>↕</span></th>
               <th>Notas</th>
-              <th style="width:220px">Ações</th>
+              <th style="width:240px">Ações</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -142,10 +145,24 @@
           <div>
             <label for="status">Status</label>
             <select id="status" name="status">
-              <option value="OK">OK</option>
               <option value="PENDENTE">PENDENTE</option>
+              <option value="OK">OK</option>
               <option value="IRREGULAR">IRREGULAR</option>
             </select>
+          </div>
+
+          <!-- NOVOS CAMPOS: Organismo/CNPJ/Descrição (visíveis sempre) -->
+          <div>
+            <label for="organismoNome">Organismo</label>
+            <input id="organismoNome" name="organismoNome" type="text" placeholder="Paróquia São José" />
+          </div>
+          <div>
+            <label for="organismoCNPJ">CNPJ</label>
+            <input id="organismoCNPJ" name="organismoCNPJ" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" />
+          </div>
+          <div class="col-2">
+            <label for="descricao">Descrição da solicitação</label>
+            <textarea id="descricao" name="descricao" placeholder="Breve descrição do objeto do protocolo"></textarea>
           </div>
 
           <!-- Campos específicos: PROTOCOLO -->
@@ -154,7 +171,7 @@
             <div class="grid">
               <div>
                 <label for="protoNumero">Número do Protocolo</label>
-                <input id="protoNumero" name="protoNumero" type="text" placeholder="Ex.: PROTO-2025-001" />
+                <input id="protoNumero" name="protoNumero" type="text" placeholder="Ex.: 2025/0001 ou PROTO-2025-001" />
               </div>
               <div>
                 <label for="protoChave">Chave de Consulta Pública</label>
@@ -169,8 +186,8 @@
           </div>
 
           <div class="col-2">
-            <label for="notes">Notas</label>
-            <textarea id="notes" name="notes" placeholder="Observações, links, números de processo, matrícula, CNPJ..."></textarea>
+            <label for="notes">Notas / Movimentações</label>
+            <textarea id="notes" name="notes" placeholder="Ex.: 25/09/2025 – Protocolo recebido...\n30/09/2025 – Encaminhado à SEDUH"></textarea>
           </div>
           <div>
             <label for="updatedAt">Atualizado em</label>
@@ -182,7 +199,7 @@
           </div>
         </div>
       </div>
-      <div class="modal-foot">
+      <div class="modal-foot" style="display:flex; gap:8px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--border)">
         <button class="button" value="cancel" type="button" id="btn-cancel">Cancelar</button>
         <button class="button primary" id="btn-save" type="submit">Salvar</button>
       </div>
@@ -192,6 +209,7 @@
   <script>
     const $ = (q, el=document) => el.querySelector(q);
     const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
+
     const STORAGE_KEY = 'supCatalog';
     const state = { data: [], sortKey:'updatedAt', sortDir:'desc', search:'', status:'', scope:'todos' };
 
@@ -202,11 +220,17 @@
     function statusPill(s){ const map={OK:'ok',PENDENTE:'warn',IRREGULAR:'bad'}; const cls=map[s]||'ok'; return `<span class="pill ${cls}">${s||'OK'}</span>`; }
     function normalize(str=''){ return str.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,''); }
 
+    function maskCNPJ(v=''){
+      const d = (v||'').replace(/\D/g,'').slice(0,14);
+      const p = [d.slice(0,2), d.slice(2,5), d.slice(5,8), d.slice(8,12), d.slice(12,14)];
+      return p[0] + (p[1]?'.'+p[1]:'') + (p[2]?'.'+p[2]:'') + (p[3]?'/'+p[3]:'') + (p[4]?'-'+p[4]:'');
+    }
+
     function applyFilters(list){
       let out=[...list];
       if(state.scope!=='todos') out = out.filter(r => (r.category||'').toLowerCase()===state.scope.toLowerCase());
       if(state.status) out = out.filter(r => (r.status||'')===state.status);
-      if(state.search){ const q=normalize(state.search); out = out.filter(r => normalize(`${r.id} ${r.name} ${r.category} ${r.status} ${r.notes} ${r.extra} ${JSON.stringify(r.protocolo||{})}`).includes(q)); }
+      if(state.search){ const q=normalize(state.search); out = out.filter(r => normalize(`${r.id} ${r.name} ${r.organismoNome||''} ${r.organismoCNPJ||''} ${r.category} ${r.status} ${r.notes} ${r.extra} ${JSON.stringify(r.protocolo||{})}`).includes(q)); }
       out.sort((a,b)=>{ const k=state.sortKey; let va=a[k]||'', vb=b[k]||''; if(k==='updatedAt'){ va=+new Date(va||0); vb=+new Date(vb||0);} return va<vb ? (state.sortDir==='asc'?-1:1) : va>vb ? (state.sortDir==='asc'?1:-1) : 0;});
       return out;
     }
@@ -215,20 +239,22 @@
       const tbody = $('#tbody'); tbody.innerHTML='';
       const list = applyFilters(state.data);
       for(const r of list){
-        const proto = (r.category||'').toLowerCase()==='protocolo' && r.protocolo ? ` <span class=\"badge-mini\">${r.protocolo.numero||''}</span>` : '';
+        const protoBadge = (r.category||'').toLowerCase()==='protocolo' && r.protocolo ? ` <span class="badge-mini">${r.protocolo.numero||''}</span>` : '';
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><code>${r.id||''}</code></td>
-          <td>${r.name||''}${proto}</td>
+          <td>${r.name||''}${protoBadge}</td>
+          <td>${r.organismoNome||'<span class="tiny">—</span>'}</td>
+          <td class="tiny">${r.organismoCNPJ||''}</td>
           <td>${r.category||''}</td>
           <td>${statusPill(r.status)}</td>
           <td>${formatDate(r.updatedAt)}</td>
-          <td style=\"max-width:520px\">${r.notes||''}</td>
+          <td style="max-width:420px">${(r.descricao||r.notes||'').slice(0,140)}${(r.descricao||r.notes||'').length>140?'…':''}</td>
           <td>
-            <div class=\"actions\">
-              <button class=\"button\" data-act=\"edit\" data-id=\"${r._id}\">Editar</button>
-              <button class=\"button danger\" data-act=\"del\" data-id=\"${r._id}\">Excluir</button>
-              <button class=\"button ghost\" data-act=\"dup\" data-id=\"${r._id}\">Duplicar</button>
+            <div class="actions">
+              <button class="button" data-act="edit" data-id="${r._id}">Editar</button>
+              <button class="button danger" data-act="del" data-id="${r._id}">Excluir</button>
+              <button class="button ghost" data-act="dup" data-id="${r._id}">Duplicar</button>
             </div>
           </td>`;
         tbody.appendChild(tr);
@@ -243,12 +269,23 @@
       const toggleProto = (cat)=>{ const show=(cat||'').toLowerCase()==='protocolo'; $('#protoSection').style.display = show? 'block':'none'; };
 
       if(rec){
-        $('#id').value = rec.id||''; $('#name').value = rec.name||''; $('#category').value = rec.category||''; $('#status').value = rec.status||'OK'; $('#notes').value = rec.notes||''; $('#updatedAt').value = rec.updatedAt? new Date(rec.updatedAt).toISOString().slice(0,16): nowISO; $('#extra').value = rec.extra||'';
+        $('#id').value = rec.id||'';
+        $('#name').value = rec.name||'';
+        $('#category').value = rec.category||'';
+        $('#status').value = rec.status||'PENDENTE';
+        $('#organismoNome').value = rec.organismoNome||'';
+        $('#organismoCNPJ').value = rec.organismoCNPJ||'';
+        $('#descricao').value = rec.descricao||'';
+        $('#notes').value = rec.notes||'';
+        $('#updatedAt').value = rec.updatedAt? new Date(rec.updatedAt).toISOString().slice(0,16): nowISO;
+        $('#extra').value = rec.extra||'';
         const p = rec.protocolo||{}; $('#protoNumero').value = p.numero||''; $('#protoChave').value = p.chave||'';
         toggleProto(rec.category); f.dataset.editing = rec._id;
       } else { delete f.dataset.editing; toggleProto($('#category').value); }
 
       $('#category').addEventListener('input', e=> toggleProto(e.target.value));
+      $('#organismoCNPJ').addEventListener('input', e=> e.target.value = maskCNPJ(e.target.value));
+
       $('#modal').showModal();
     }
 
@@ -266,13 +303,15 @@
     function duplicateRecord(id){ const rec = state.data.find(r=>r._id===id); if(!rec) return; const copy = { ...rec, _id: uid(), id: rec.id+"-COPY", updatedAt: new Date().toISOString() }; state.data.push(copy); saveData(); render(); }
 
     function sampleData(){ const now=new Date().toISOString(); return [
-      { _id: uid(), id:'PROTO-2025-001', name:'Protocolo — Regularização 074/CENTRO', category:'Protocolo', status:'PENDENTE', updatedAt:now, notes:'Aberto por Pe. João. Aguardando documentos.', protocolo:{ numero:'PROTO-2025-001', chave:'ABCD-1234' } },
-      { _id: uid(), id:'074/CENTRO', name:'Igreja Matriz – Paróquia Rainha da Paz', category:'Imóvel', status:'OK', updatedAt: now, notes:'Matrícula 92.940 (1º RI/DF). Escritura 30/12/2020. CNPJ 00.108.217/0172-76.' },
-      { _id: uid(), id:'PROC-0390-000597/2016', name:'Regularização – SUPAR/COAP', category:'Processo', status:'PENDENTE', updatedAt: now, notes:'09/05/2025: Certidão de Viabilidade emitida e enviada à COAP; Ofício 147/2025 SEDUH.' }
+      { _id: uid(), id:'PROTO-2025-001', name:'Protocolo — Regularização 074/CENTRO', category:'Protocolo', status:'PENDENTE', updatedAt:now, organismoNome:'Paróquia São José', organismoCNPJ:'00.108.217/0172-76', descricao:'Regularização fundiária do imóvel matriz.', notes:'25/09/2025 – Protocolo recebido na Cúria\n28/09/2025 – Documentos encaminhados à Procuradoria\n30/09/2025 – Aguardando análise da SEDUH', protocolo:{ numero:'2025/0001', chave:'ABCD-1234' } },
+      { _id: uid(), id:'074/CENTRO', name:'Igreja Matriz – Paróquia Rainha da Paz', category:'Imóvel', status:'OK', updatedAt: now, organismoNome:'Paróquia Rainha da Paz', organismoCNPJ:'11.222.333/0001-44', descricao:'Imóvel Matriz – matrícula 92.940 (1º RI/DF).', notes:'Escritura 30/12/2020. CNPJ 00.108.217/0172-76.' },
+      { _id: uid(), id:'PROC-0390-000597/2016', name:'Regularização – SUPAR/COAP', category:'Processo', status:'PENDENTE', updatedAt: now, organismoNome:'Arquidiocese de Exemplo', organismoCNPJ:'12.345.678/0001-99', descricao:'Processo administrativo SEDUH.', notes:'09/05/2025: Certidão de Viabilidade emitida e enviada à COAP; Ofício 147/2025 SEDUH.' }
     ]; }
 
+    // ======= Boot =======
     loadData(); render();
 
+    // ======= Events =======
     $('#btn-add').addEventListener('click', ()=> openModal('new'));
     $('#closeModal').addEventListener('click', closeModal);
     $('#btn-cancel').addEventListener('click', closeModal);
@@ -284,7 +323,18 @@
     $('#recordForm').addEventListener('submit', (e)=>{
       e.preventDefault();
       const category = $('#category').value.trim();
-      const payload = { id:$('#id').value.trim(), name:$('#name').value.trim(), category, status:$('#status').value, notes:$('#notes').value.trim(), updatedAt: new Date($('#updatedAt').value || Date.now()).toISOString(), extra:$('#extra').value.trim() };
+      const payload = {
+        id:$('#id').value.trim(),
+        name:$('#name').value.trim(),
+        category,
+        status:$('#status').value,
+        organismoNome: $('#organismoNome').value.trim(),
+        organismoCNPJ: $('#organismoCNPJ').value.trim(),
+        descricao: $('#descricao').value.trim(),
+        notes:$('#notes').value.trim(),
+        updatedAt: new Date($('#updatedAt').value || Date.now()).toISOString(),
+        extra:$('#extra').value.trim()
+      };
       if(category.toLowerCase()==='protocolo'){ payload.protocolo = collectProtocolo(); } else { payload.protocolo = undefined; }
       const editingId = e.currentTarget.dataset.editing || null; upsertRecord(payload, editingId); closeModal();
     });
@@ -306,18 +356,10 @@
 
     $('#btn-export').addEventListener('click', ()=>{ const blob = new Blob([JSON.stringify(state.data, null, 2)], { type:'application/json' }); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`PROJETO-SUP-catalogo-${new Date().toISOString().slice(0,10)}.json`; a.click(); });
 
-    $('#importFile').addEventListener('change', async (e)=>{ const file=e.target.files?.[0]; if(!file) return; const text = await file.text(); try{ const arr=JSON.parse(text); if(!Array.isArray(arr)) throw new Error('JSON deve ser um array de objetos.'); const mapped = arr.map(o=>({ _id:o._id||uid(), id:o.id||'', name:o.name||'', category:o.category||'', status:o.status||'OK', notes:o.notes||'', updatedAt:o.updatedAt||new Date().toISOString(), extra:o.extra||'', protocolo: o.protocolo? { numero:o.protocolo.numero||'', chave:o.protocolo.chave||'' } : undefined })); state.data=mapped; saveData(); render(); alert('Importação concluída.'); } catch(err){ alert('Falha ao importar JSON: '+ err.message); } finally { e.target.value=''; } });
+    $('#importFile').addEventListener('change', async (e)=>{ const file=e.target.files?.[0]; if(!file) return; const text = await file.text(); try{ const arr=JSON.parse(text); if(!Array.isArray(arr)) throw new Error('JSON deve ser um array de objetos.'); const mapped = arr.map(o=>({ _id:o._id||uid(), id:o.id||'', name:o.name||'', category:o.category||'', status:o.status||'OK', updatedAt:o.updatedAt||new Date().toISOString(), extra:o.extra||'', organismoNome:o.organismoNome||'', organismoCNPJ:o.organismoCNPJ||'', descricao:o.descricao||'', protocolo: o.protocolo? { numero:o.protocolo.numero||'', chave:o.protocolo.chave||'' } : undefined, notes: o.notes||'' })); state.data=mapped; saveData(); render(); alert('Importação concluída.'); } catch(err){ alert('Falha ao importar JSON: '+ err.message); } finally { e.target.value=''; } });
 
     $('#btn-sample').addEventListener('click', ()=>{ if(!confirm('Carregar exemplos e substituir o que existe?')) return; state.data = sampleData(); saveData(); render(); });
     $('#btn-wipe').addEventListener('click', ()=>{ if(confirm('Apagar TODOS os dados do PROJETO SUP neste navegador?')){ localStorage.removeItem(STORAGE_KEY); state.data=[]; render(); } });
   </script>
-
-  <!--
-    PROJETO SUP – v0.3
-    • Campos dedicados de Protocolo: número e chave.
-    • Aba "Protocolos" + badge do número na listagem.
-    • Import/Export preserva objeto "protocolo".
-    • Botões Gerar/ Copiar chave.
-  -->
 </body>
 </html>
