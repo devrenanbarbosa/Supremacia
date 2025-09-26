@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PROJETO SUP — Catálogo (v0.4)</title>
+  <title>PROJETO SUP — Catálogo (v0.5)</title>
   <style>
     :root { --bg:#0f172a; --panel:#111827; --muted:#94a3b8; --text:#e5e7eb; --accent:#22d3ee; --accent-2:#10b981; --danger:#ef4444; --border:#1f2937; }
     html, body { height:100%; }
@@ -21,12 +21,12 @@
     .toolbar .left, .toolbar .right { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
     input[type="text"], input[type="search"], select { background:#0b1220; border:1px solid var(--border); color:var(--text); border-radius:12px; padding:10px 12px; outline:none; }
     input[type="file"] { color:var(--muted); }
-    .button { cursor:pointer; border:1px solid var(--border); background:#0b1220; color:var(--text); padding:10px 14px; border-radius:12px; font-weight:600; transition:transform .05s ease, box-shadow .2s; }
+    .button { cursor:pointer; border:1px solid var(--border); background:#0b1220; color:#e5e7eb; padding:10px 14px; border-radius:12px; font-weight:600; transition:transform .05s ease, box-shadow .2s; }
     .button:hover { box-shadow:0 0 0 2px rgba(34,211,238,.2) inset; }
     .button.primary { background:linear-gradient(135deg,#0891b2,#22d3ee); color:#061018; border:none; }
     .button.success { background:linear-gradient(135deg,#0e9f6e,var(--accent-2)); color:#05140f; border:none; }
     .button.danger { background:linear-gradient(135deg,#b91c1c,var(--danger)); color:#1c0202; border:none; }
-    .button.ghost { background:transparent; border:1px dashed var(--border); color:var(--muted); }
+    .button.ghost { background:transparent; border:1px dashed var(--border); color:#94a3b8; }
     table { width:100%; border-collapse:collapse; }
     thead th { text-align:left; font-size:13px; color:var(--muted); font-weight:700; padding:10px 8px; border-bottom:1px solid var(--border); user-select:none; }
     tbody td { padding:12px 8px; border-bottom:1px dashed var(--border); vertical-align:top; }
@@ -37,19 +37,19 @@
     .pill.bad { background:rgba(239,68,68,.15); color:#fda4a4; }
     .actions { display:flex; gap:6px; }
     .footer { margin-top:14px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; }
-    dialog { width:min(860px,98vw); border:none; border-radius:18px; padding:0; background:#0b1220; color:var(--text); box-shadow:0 30px 80px rgba(0,0,0,.6); }
+    dialog { width:min(900px,98vw); border:none; border-radius:18px; padding:0; background:#0b1220; color:#e5e7eb; box-shadow:0 30px 80px rgba(0,0,0,.6); }
     dialog::backdrop { background:rgba(0,0,0,.55); backdrop-filter:blur(2px); }
     .modal-head { display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--border); }
     .modal-body { padding:16px 18px; }
     .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     .grid .col-2 { grid-column:span 2; }
     label { display:block; font-size:12px; color:var(--muted); margin-bottom:6px; }
-    input[type="datetime-local"], textarea, input[type="url"], input[type="tel"] { width:100%; background:#0b1020; border:1px solid var(--border); color:var(--text); border-radius:12px; padding:10px 12px; outline:none; }
+    input[type="datetime-local"], textarea, input[type="url"], input[type="tel"], input[type="date"] { width:100%; background:#0b1020; border:1px solid var(--border); color:#e5e7eb; border-radius:12px; padding:10px 12px; outline:none; }
     textarea { min-height:100px; resize:vertical; }
     .inline { display:flex; gap:8px; align-items:center; }
-    .hint { font-size:12px; color:var(--muted); }
+    .hint { font-size:12px; color:#94a3b8; }
     .badge-mini { font-size:11px; color:#061018; background:var(--accent); padding:2px 6px; border-radius:999px; font-weight:800; }
-    .tiny { font-size:11px; color:var(--muted); }
+    .tiny { font-size:11px; color:#94a3b8; }
   </style>
 </head>
 <body>
@@ -58,8 +58,8 @@
       <div style="display:flex; align-items:center; gap:10px">
         <div class="logo">SUP</div>
         <div>
-          <h1>PROJETO SUP — Catálogo <span class="badge">HTML • LocalStorage • v0.4</span></h1>
-          <div style="font-size:13px;color:var(--muted);margin-top:6px;max-width:80ch">Evolução: campos de <strong>Organismo</strong>, <strong>CNPJ</strong> e <strong>Descrição</strong> integrados ao cadastro e exportação.</div>
+          <h1>PROJETO SUP — Catálogo <span class="badge">HTML • LocalStorage • v0.5</span></h1>
+          <div style="font-size:13px;color:var(--muted);margin-top:6px;max-width:80ch">Formulário de Protocolo aprimorado: Tipo, Prioridade, Responsável, Prazo, Anexo, validações (CNPJ/duplicidade), atalho de histórico e abrir consulta.</div>
         </div>
       </div>
       <button class="button primary" id="btn-add">+ Novo registro</button>
@@ -104,10 +104,12 @@
               <th class="sortable" data-key="organismoNome">Organismo <span>↕</span></th>
               <th>CNPJ</th>
               <th class="sortable" data-key="category">Categoria <span>↕</span></th>
+              <th>Prioridade</th>
+              <th>Prazo</th>
               <th class="sortable" data-key="status">Status <span>↕</span></th>
               <th class="sortable" data-key="updatedAt">Atualizado em <span>↕</span></th>
               <th>Notas</th>
-              <th style="width:240px">Ações</th>
+              <th style="width:260px">Ações</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -151,7 +153,7 @@
             </select>
           </div>
 
-          <!-- NOVOS CAMPOS: Organismo/CNPJ/Descrição (visíveis sempre) -->
+          <!-- Campos gerais de Organismo -->
           <div>
             <label for="organismoNome">Organismo</label>
             <input id="organismoNome" name="organismoNome" type="text" placeholder="Paróquia São José" />
@@ -183,6 +185,64 @@
                 <div class="hint">Sugestão: chave de 8–12 caracteres (A–Z, 0–9).</div>
               </div>
             </div>
+          </div>
+
+          <!-- Metadados do Protocolo -->
+          <div>
+            <label for="tipoDemanda">Tipo da demanda</label>
+            <select id="tipoDemanda" name="tipoDemanda">
+              <option value="">— selecione —</option>
+              <option>Regularização</option>
+              <option>Documentos</option>
+              <option>Financeiro</option>
+              <option>Outros</option>
+            </select>
+          </div>
+          <div>
+            <label for="prioridade">Prioridade</label>
+            <select id="prioridade" name="prioridade">
+              <option value="Média">Média</option>
+              <option value="Baixa">Baixa</option>
+              <option value="Alta">Alta</option>
+              <option value="Urgente">Urgente</option>
+            </select>
+          </div>
+          <div>
+            <label for="responsavel">Responsável</label>
+            <input id="responsavel" name="responsavel" type="text" placeholder="Nome de quem conduz" />
+          </div>
+          <div>
+            <label for="prazo">Prazo (vencimento)</label>
+            <input id="prazo" name="prazo" type="date" />
+          </div>
+          <div class="col-2">
+            <label for="anexoUrl">Anexo (URL)</label>
+            <input id="anexoUrl" name="anexoUrl" type="url" placeholder="https://... (ofício, certidão, drive, etc.)" />
+          </div>
+
+          <!-- Atalho: adicionar movimentação no histórico -->
+          <div class="col-2" style="border:1px dashed var(--border); border-radius:12px; padding:12px;">
+            <div style="font-weight:700; margin-bottom:8px; color:var(--accent)">Adicionar movimentação no histórico</div>
+            <div class="grid">
+              <div>
+                <label for="histDate">Data</label>
+                <input id="histDate" type="date" />
+              </div>
+              <div>
+                <label for="histText">Descrição do evento</label>
+                <input id="histText" type="text" placeholder="Ex.: Ofício 200/2025 juntado" />
+              </div>
+              <div class="col-2" style="display:flex; gap:8px; align-items:end;">
+                <button type="button" class="button" id="btnAddHist">+ Adicionar ao histórico</button>
+                <span class="muted">Isto insere uma linha formatada no campo “Notas”.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Acesso rápido à consulta -->
+          <div class="col-2" style="display:flex; gap:8px; align-items:center;">
+            <button type="button" class="button ghost" id="btnOpenConsulta">Abrir consulta pública</button>
+            <span class="muted">Abre a página <code>consulta.html</code> com número/chave preenchidos.</span>
           </div>
 
           <div class="col-2">
@@ -226,11 +286,41 @@
       return p[0] + (p[1]?'.'+p[1]:'') + (p[2]?'.'+p[2]:'') + (p[3]?'/'+p[3]:'') + (p[4]?'-'+p[4]:'');
     }
 
+    // ===== Validações e utilitários extras =====
+    function isValidCNPJ(cnpjRaw=''){
+      const c = (cnpjRaw||'').replace(/\D/g,'');
+      if (c.length !== 14 || /^(\d)\1{13}$/.test(c)) return false;
+      const calc = (base) => {
+        let size = base.length - 7, pos = size, sum = 0;
+        for (let i = base.length; i >= 1; i--) {
+          sum += base[base.length - i] * pos--;
+          if (pos < 2) pos = 9;
+        }
+        const result = 11 - (sum % 11);
+        return (result > 9) ? 0 : result;
+      };
+      const nums = c.substring(0, 12);
+      const d1 = calc(nums);
+      const d2 = calc(nums + d1);
+      return c === nums + String(d1) + String(d2);
+    }
+
+    function isProtoNumberUnique(num, editingId=null){
+      const n = (num||'').trim().toLowerCase();
+      return !state.data.some(r=>{
+        if ((r.category||'').toLowerCase() !== 'protocolo' || !r.protocolo) return false;
+        if (editingId && r._id === editingId) return false;
+        return (r.protocolo.numero||'').toLowerCase() === n;
+      });
+    }
+
+    function dmy(dStr){ if(!dStr) return ''; const [y,m,d] = dStr.split('-'); return `${d}/${m}/${y}`; }
+
     function applyFilters(list){
       let out=[...list];
       if(state.scope!=='todos') out = out.filter(r => (r.category||'').toLowerCase()===state.scope.toLowerCase());
       if(state.status) out = out.filter(r => (r.status||'')===state.status);
-      if(state.search){ const q=normalize(state.search); out = out.filter(r => normalize(`${r.id} ${r.name} ${r.organismoNome||''} ${r.organismoCNPJ||''} ${r.category} ${r.status} ${r.notes} ${r.extra} ${JSON.stringify(r.protocolo||{})}`).includes(q)); }
+      if(state.search){ const q=normalize(state.search); out = out.filter(r => normalize(`${r.id} ${r.name} ${r.organismoNome||''} ${r.organismoCNPJ||''} ${r.category} ${r.status} ${r.prioridade||''} ${r.prazo||''} ${r.notes} ${r.extra} ${JSON.stringify(r.protocolo||{})}`).includes(q)); }
       out.sort((a,b)=>{ const k=state.sortKey; let va=a[k]||'', vb=b[k]||''; if(k==='updatedAt'){ va=+new Date(va||0); vb=+new Date(vb||0);} return va<vb ? (state.sortDir==='asc'?-1:1) : va>vb ? (state.sortDir==='asc'?1:-1) : 0;});
       return out;
     }
@@ -247,6 +337,8 @@
           <td>${r.organismoNome||'<span class="tiny">—</span>'}</td>
           <td class="tiny">${r.organismoCNPJ||''}</td>
           <td>${r.category||''}</td>
+          <td>${r.prioridade||'<span class="tiny">—</span>'}</td>
+          <td class="tiny">${r.prazo||''}</td>
           <td>${statusPill(r.status)}</td>
           <td>${formatDate(r.updatedAt)}</td>
           <td style="max-width:420px">${(r.descricao||r.notes||'').slice(0,140)}${(r.descricao||r.notes||'').length>140?'…':''}</td>
@@ -279,6 +371,11 @@
         $('#notes').value = rec.notes||'';
         $('#updatedAt').value = rec.updatedAt? new Date(rec.updatedAt).toISOString().slice(0,16): nowISO;
         $('#extra').value = rec.extra||'';
+        $('#tipoDemanda').value = rec.tipoDemanda||'';
+        $('#prioridade').value = rec.prioridade||'Média';
+        $('#responsavel').value = rec.responsavel||'';
+        $('#prazo').value = rec.prazo||'';
+        $('#anexoUrl').value = rec.anexoUrl||'';
         const p = rec.protocolo||{}; $('#protoNumero').value = p.numero||''; $('#protoChave').value = p.chave||'';
         toggleProto(rec.category); f.dataset.editing = rec._id;
       } else { delete f.dataset.editing; toggleProto($('#category').value); }
@@ -303,7 +400,7 @@
     function duplicateRecord(id){ const rec = state.data.find(r=>r._id===id); if(!rec) return; const copy = { ...rec, _id: uid(), id: rec.id+"-COPY", updatedAt: new Date().toISOString() }; state.data.push(copy); saveData(); render(); }
 
     function sampleData(){ const now=new Date().toISOString(); return [
-      { _id: uid(), id:'PROTO-2025-001', name:'Protocolo — Regularização 074/CENTRO', category:'Protocolo', status:'PENDENTE', updatedAt:now, organismoNome:'Paróquia São José', organismoCNPJ:'00.108.217/0172-76', descricao:'Regularização fundiária do imóvel matriz.', notes:'25/09/2025 – Protocolo recebido na Cúria\n28/09/2025 – Documentos encaminhados à Procuradoria\n30/09/2025 – Aguardando análise da SEDUH', protocolo:{ numero:'2025/0001', chave:'ABCD-1234' } },
+      { _id: uid(), id:'PROTO-2025-001', name:'Protocolo — Regularização 074/CENTRO', category:'Protocolo', status:'PENDENTE', updatedAt:now, organismoNome:'Paróquia São José', organismoCNPJ:'00.108.217/0172-76', descricao:'Regularização fundiária do imóvel matriz.', tipoDemanda:'Regularização', prioridade:'Alta', responsavel:'Pe. João', prazo:'2025-10-15', anexoUrl:'', notes:'25/09/2025 – Protocolo recebido na Cúria\n28/09/2025 – Documentos encaminhados à Procuradoria\n30/09/2025 – Aguardando análise da SEDUH', protocolo:{ numero:'2025/0001', chave:'ABCD-1234' } },
       { _id: uid(), id:'074/CENTRO', name:'Igreja Matriz – Paróquia Rainha da Paz', category:'Imóvel', status:'OK', updatedAt: now, organismoNome:'Paróquia Rainha da Paz', organismoCNPJ:'11.222.333/0001-44', descricao:'Imóvel Matriz – matrícula 92.940 (1º RI/DF).', notes:'Escritura 30/12/2020. CNPJ 00.108.217/0172-76.' },
       { _id: uid(), id:'PROC-0390-000597/2016', name:'Regularização – SUPAR/COAP', category:'Processo', status:'PENDENTE', updatedAt: now, organismoNome:'Arquidiocese de Exemplo', organismoCNPJ:'12.345.678/0001-99', descricao:'Processo administrativo SEDUH.', notes:'09/05/2025: Certidão de Viabilidade emitida e enviada à COAP; Ofício 147/2025 SEDUH.' }
     ]; }
@@ -320,9 +417,35 @@
     $('#btnGenKey').addEventListener('click', ()=>{ const el=$('#protoChave'); el.value = genKey(10); el.focus(); el.select(); document.execCommand('copy'); alert('Chave gerada e copiada.'); });
     $('#btnCopyKey').addEventListener('click', ()=>{ const el=$('#protoChave'); el.select(); document.execCommand('copy'); alert('Chave copiada.'); });
 
+    // Atalho: adicionar movimentação ao histórico
+    $('#btnAddHist')?.addEventListener('click', ()=>{
+      const dt = $('#histDate')?.value;
+      const tx = ($('#histText')?.value||'').trim();
+      if(!tx){ alert('Informe a descrição do evento.'); return; }
+      const linha = `${dmy(dt) || dmy(new Date().toISOString().slice(0,10))} – ${tx}`;
+      const area = $('#notes');
+      area.value = (area.value ? area.value + '\n' : '') + linha;
+      $('#histText').value = '';
+    });
+
+    // Abrir consulta pública com n+k
+    $('#btnOpenConsulta')?.addEventListener('click', ()=>{
+      const num = ($('#protoNumero')?.value||'').trim();
+      const key = ($('#protoChave')?.value||'').trim();
+      if(!num || !key){ alert('Preencha Número do Protocolo e Chave.'); return; }
+      const url = new URL(location.href);
+      url.pathname = url.pathname.replace(/index\.html$/i, '') + 'consulta.html';
+      url.searchParams.set('n', num);
+      url.searchParams.set('k', key);
+      window.open(url.toString(), '_blank');
+    });
+
+    // Submit com validações
     $('#recordForm').addEventListener('submit', (e)=>{
       e.preventDefault();
+      const editingId = e.currentTarget.dataset.editing || null;
       const category = $('#category').value.trim();
+
       const payload = {
         id:$('#id').value.trim(),
         name:$('#name').value.trim(),
@@ -333,10 +456,36 @@
         descricao: $('#descricao').value.trim(),
         notes:$('#notes').value.trim(),
         updatedAt: new Date($('#updatedAt').value || Date.now()).toISOString(),
-        extra:$('#extra').value.trim()
+        extra:$('#extra').value.trim(),
+        // novos campos
+        tipoDemanda: $('#tipoDemanda')?.value || '',
+        prioridade:  $('#prioridade')?.value || 'Média',
+        responsavel: $('#responsavel')?.value || '',
+        prazo:       $('#prazo')?.value || '',
+        anexoUrl:    $('#anexoUrl')?.value || ''
       };
-      if(category.toLowerCase()==='protocolo'){ payload.protocolo = collectProtocolo(); } else { payload.protocolo = undefined; }
-      const editingId = e.currentTarget.dataset.editing || null; upsertRecord(payload, editingId); closeModal();
+
+      if(category.toLowerCase()==='protocolo'){
+        payload.protocolo = {
+          numero: ($('#protoNumero')?.value||'').trim(),
+          chave:  ($('#protoChave')?.value||'').trim()
+        };
+
+        if(!payload.protocolo.numero){ alert('Informe o Número do Protocolo.'); return; }
+        if(!isProtoNumberUnique(payload.protocolo.numero, editingId)){ alert('Já existe um Protocolo com este Número.'); return; }
+        if(!payload.protocolo.chave){ if(!confirm('A Chave de Consulta está vazia. Deseja continuar assim?')) return; }
+      } else {
+        payload.protocolo = undefined;
+      }
+
+      // valida CNPJ se informado
+      const cnpjDigits = payload.organismoCNPJ.replace(/\D/g,'');
+      if (cnpjDigits && !isValidCNPJ(cnpjDigits)){
+        if(!confirm('CNPJ parece inválido. Deseja salvar mesmo assim?')) return;
+      }
+
+      upsertRecord(payload, editingId);
+      closeModal();
     });
 
     $('#tbody').addEventListener('click', (e)=>{
@@ -356,7 +505,7 @@
 
     $('#btn-export').addEventListener('click', ()=>{ const blob = new Blob([JSON.stringify(state.data, null, 2)], { type:'application/json' }); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`PROJETO-SUP-catalogo-${new Date().toISOString().slice(0,10)}.json`; a.click(); });
 
-    $('#importFile').addEventListener('change', async (e)=>{ const file=e.target.files?.[0]; if(!file) return; const text = await file.text(); try{ const arr=JSON.parse(text); if(!Array.isArray(arr)) throw new Error('JSON deve ser um array de objetos.'); const mapped = arr.map(o=>({ _id:o._id||uid(), id:o.id||'', name:o.name||'', category:o.category||'', status:o.status||'OK', updatedAt:o.updatedAt||new Date().toISOString(), extra:o.extra||'', organismoNome:o.organismoNome||'', organismoCNPJ:o.organismoCNPJ||'', descricao:o.descricao||'', protocolo: o.protocolo? { numero:o.protocolo.numero||'', chave:o.protocolo.chave||'' } : undefined, notes: o.notes||'' })); state.data=mapped; saveData(); render(); alert('Importação concluída.'); } catch(err){ alert('Falha ao importar JSON: '+ err.message); } finally { e.target.value=''; } });
+    $('#importFile').addEventListener('change', async (e)=>{ const file=e.target.files?.[0]; if(!file) return; const text = await file.text(); try{ const arr=JSON.parse(text); if(!Array.isArray(arr)) throw new Error('JSON deve ser um array de objetos.'); const mapped = arr.map(o=>({ _id:o._id||uid(), id:o.id||'', name:o.name||'', category:o.category||'', status:o.status||'OK', updatedAt:o.updatedAt||new Date().toISOString(), extra:o.extra||'', organismoNome:o.organismoNome||'', organismoCNPJ:o.organismoCNPJ||'', descricao:o.descricao||'', tipoDemanda:o.tipoDemanda||'', prioridade:o.prioridade||'', responsavel:o.responsavel||'', prazo:o.prazo||'', anexoUrl:o.anexoUrl||'', protocolo: o.protocolo? { numero:o.protocolo.numero||'', chave:o.protocolo.chave||'' } : undefined, notes: o.notes||'' })); state.data=mapped; saveData(); render(); alert('Importação concluída.'); } catch(err){ alert('Falha ao importar JSON: '+ err.message); } finally { e.target.value=''; } });
 
     $('#btn-sample').addEventListener('click', ()=>{ if(!confirm('Carregar exemplos e substituir o que existe?')) return; state.data = sampleData(); saveData(); render(); });
     $('#btn-wipe').addEventListener('click', ()=>{ if(confirm('Apagar TODOS os dados do PROJETO SUP neste navegador?')){ localStorage.removeItem(STORAGE_KEY); state.data=[]; render(); } });
