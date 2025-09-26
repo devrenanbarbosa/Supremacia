@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Consulta Pública — PROJETO SUP</title>
+  <style>
+    :root { --bg:#0b1020; --panel:#0f172a; --muted:#94a3b8; --text:#e5e7eb; --accent:#22d3ee; --ok:#84cc16; --warn:#f59e0b; --bad:#ef4444; --border:#1f2937; }
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,#060b18,var(--bg));color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans"}
+    .container{max-width:860px;margin:24px auto;padding:0 16px}
+    header{display:flex;gap:12px;align-items:center}
+    .logo{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#22d3ee,#10b981);display:grid;place-items:center;color:#061018;font-weight:900}
+    h1{font-size:clamp(20px,3vw,26px);margin:0}
+    .card{background:rgba(15,23,42,.9);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.35);}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid .col-2{grid-column:span 2}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input{width:100%;background:#0b1220;border:1px solid var(--border);color:var(--text);border-radius:12px;padding:10px 12px;outline:none}
+    .button{cursor:pointer;border:1px solid var(--border);background:#0b1220;color:var(--text);padding:10px 14px;border-radius:12px;font-weight:600}
+    .button.primary{background:linear-gradient(135deg,#0891b2,#22d3ee);color:#061018;border:none}
+    .button.ghost{background:transparent;border:1px dashed var(--border);color:var(--muted)}
+    .row{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+    .muted{color:var(--muted);font-size:12px}
+    .result{margin-top:16px}
+    .title{font-weight:800;font-size:18px;margin:0 0 4px}
+    .pill{padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;display:inline-block}
+    .pill.ok{background:rgba(132,204,22,.15);color:#c4f25f}
+    .pill.warn{background:rgba(245,158,11,.15);color:#ffd27a}
+    .pill.bad{background:rgba(239,68,68,.15);color:#fda4a4}
+    .kv{display:grid;grid-template-columns:180px 1fr;gap:6px 12px;margin-top:8px}
+    .kv label{color:var(--muted)}
+    .notes{white-space:pre-wrap;background:#0b1220;border:1px dashed var(--border);border-radius:12px;padding:10px}
+    .actions{display:flex;gap:8px;margin-top:10px}
+    .center{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--muted);padding:24px}
+    .warnbox{border:1px dashed var(--border);border-radius:12px;padding:10px;font-size:12px;color:var(--muted)}
+    @media print{ body{background:#fff;color:#000} .card{box-shadow:none;border:1px solid #ccc} .button{display:none} header,.warnbox{display:none} }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">SUP</div>
+      <div>
+        <h1>Consulta Pública — PROJETO SUP</h1>
+        <div class="muted">Acompanhe o andamento do seu protocolo com o <strong>Número</strong> e a <strong>Chave de Consulta Pública</strong>.</div>
+      </div>
+    </header>
+
+    <div class="card" style="margin-top:12px">
+      <div class="grid">
+        <div>
+          <label for="numero">Número do Protocolo</label>
+          <input id="numero" placeholder="Ex.: PROTO-2025-001" />
+        </div>
+        <div>
+          <label for="chave">Chave de Consulta Pública</label>
+          <input id="chave" placeholder="Ex.: ABCD-1234" />
+        </div>
+        <div class="row col-2">
+          <button class="button primary" id="btnBuscar">Buscar</button>
+          <button class="button" id="btnLimpar">Limpar</button>
+          <button class="button ghost" id="btnLink">Copiar link desta consulta</button>
+        </div>
+      </div>
+      <div class="warnbox" style="margin-top:10px">Privacidade: esta página lê apenas o que está no <code>localStorage</code> deste navegador, salvo pelo próprio SUP. Para publicar para todos, será preciso um backend (futuro).</div>
+    </div>
+
+    <div id="resultado" class="result"></div>
+
+    <!-- QR Code da consulta (opcional) -->
+    <div id="qrBox" class="center" style="display:none;flex-direction:column">
+      <div class="card" style="text-align:center">
+        <div class="muted" style="margin-bottom:8px">QR Code da consulta (requer internet para carregar a imagem do QR):</div>
+        <img id="qrImg" alt="QR Code" style="width:220px;height:220px;image-rendering:pixelated;border-radius:8px;border:1px solid var(--border)" />
+        <div class="muted" style="margin-top:8px" id="qrLink"></div>
+      </div>
+    </div>
+
+    <div class="center" id="vazio">
+      <span>Digite o número e a chave para consultar.</span>
+    </div>
+  </div>
+
+  <script>
+    const $ = (q, el=document)=> el.querySelector(q);
+    const STORAGE_KEY = 'supCatalog';
+
+    function loadData(){
+      try{ const raw = localStorage.getItem(STORAGE_KEY); return raw? JSON.parse(raw): []; }
+      catch(e){ console.error('Erro ao ler localStorage', e); return []; }
+    }
+
+    function statusPill(s){ const map={OK:'ok',PENDENTE:'warn',IRREGULAR:'bad'}; const cls=map[s]||'ok'; return `<span class="pill ${cls}">${s||'OK'}</span>`; }
+    function fmt(iso){ if(!iso) return ''; const d=new Date(iso); return isNaN(d)? iso : d.toLocaleString('pt-BR'); }
+    function htmlEscape(s=''){ return (s+'').replace(/[&<>"]/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m])); }
+
+    function findProto(numero, chave){
+      const data = loadData();
+      const num = (numero||'').trim().toLowerCase();
+      const key = (chave||'').trim().toLowerCase();
+      return data.find(r=> (r.category||'').toLowerCase()==='protocolo'
+                        && r.protocolo
+                        && (r.protocolo.numero||'').toLowerCase()===num
+                        && (r.protocolo.chave||'').toLowerCase()===key );
+    }
+
+    function renderResult(r){
+      const box = $('#resultado');
+      const empty = $('#vazio');
+      const qrBox = document.getElementById('qrBox');
+      if(!r){ box.innerHTML = ''; empty.style.display='flex'; if(qrBox) qrBox.style.display='none'; return; }
+      empty.style.display='none';
+      const p = r.protocolo||{};
+
+      // Monta HTML principal
+      box.innerHTML = `
+        <div class="card">
+          <div class="title">${htmlEscape(r.name||'Protocolo')}</div>
+          <div class="muted" style="margin-bottom:6px">ID: <code>${htmlEscape(r.id||'')}</code></div>
+          <div class="kv">
+            <label>Número</label><div><strong>${htmlEscape(p.numero||'')}</strong></div>
+            <label>Chave</label><div><code>${htmlEscape(p.chave||'')}</code></div>
+            <label>Status</label><div>${statusPill(r.status)}</div>
+            <label>Atualizado em</label><div>${fmt(r.updatedAt)}</div>
+            <label>Categoria</label><div>${htmlEscape(r.category||'')}</div>
+            <label>Notas / Movimentações</label><div class="notes">${(r.notes||'').replace(/</g,'&lt;')}</div>
+          </div>
+          <div class="actions">
+            <button class="button" id="btnImprimir">Imprimir</button>
+            <button class="button ghost" id="btnCopiarNumero">Copiar nº</button>
+            <button class="button ghost" id="btnCopiarChave">Copiar chave</button>
+          </div>
+        </div>`;
+
+      // Botões padrão
+      $('#btnImprimir').onclick    = ()=> window.print();
+      $('#btnCopiarNumero').onclick = ()=> navigator.clipboard?.writeText(p.numero||'');
+      $('#btnCopiarChave').onclick  = ()=> navigator.clipboard?.writeText(p.chave||'');
+
+      // === Histórico formatado (cada linha com data opcional) ===
+      const notesEl = box.querySelector('.notes');
+      if (notesEl) {
+        const lines = (r.notes||'').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+        const reDate = /^(\d{2}[\/\-]\d{2}[\/\-]\d{4}|\d{4}[\-\/]\d{2}[\-\/]\d{2})\s?[–—-]?\s?/;
+        const html = lines.map(line=>{
+          const m = line.match(reDate);
+          const date = m? m[1] : '';
+          const rest = m? line.replace(reDate,'') : line;
+          const pill = (r.status==='OK'?'ok':(r.status==='IRREGULAR'?'bad':'warn'));
+          return '<div style="display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:start">'
+               + '<div><span class="pill '+pill+'">'+(date||'')+'</span></div>'
+               + '<div>'+rest.replace(/</g,'&lt;')+'</div>'
+               + '</div>';
+        }).join('') || '<div class="muted">Sem histórico informado.</div>';
+        notesEl.innerHTML = html;
+        const labels = box.querySelectorAll('.kv label');
+        labels.forEach(l=>{ if(l.textContent.includes('Notas')) l.textContent='Histórico'; });
+      }
+
+      // === Botão QR Code ===
+      const actions = box.querySelector('.actions');
+      if (actions && !actions.querySelector('#btnMostrarQR')) {
+        const b = document.createElement('button');
+        b.className = 'button';
+        b.id = 'btnMostrarQR';
+        b.textContent = 'Mostrar QR Code';
+        actions.appendChild(b);
+        b.onclick = ()=> showQR();
+      }
+    }
+
+    function buildShareURL(){
+      const url = new URL(location.href);
+      const n = document.getElementById('numero').value.trim();
+      const k = document.getElementById('chave').value.trim();
+      if(n) url.searchParams.set('n', n); else url.searchParams.delete('n');
+      if(k) url.searchParams.set('k', k); else url.searchParams.delete('k');
+      return url.toString();
+    }
+
+    function showQR(){
+      const link = buildShareURL();
+      const qrImg = document.getElementById('qrImg');
+      const qrBox = document.getElementById('qrBox');
+      if(!qrImg || !qrBox){ alert('Seção de QR Code não encontrada.'); return; }
+      const qrApi = 'https://chart.googleapis.com/chart?cht=qr&chs=240x240&choe=UTF-8&chl=' + encodeURIComponent(link);
+      qrImg.onerror = ()=>{ qrBox.style.display='block'; qrImg.alt = 'Falha ao carregar QR. Verifique a conexão.'; };
+      qrImg.src = qrApi;
+      const linkEl = document.getElementById('qrLink'); if(linkEl) linkEl.textContent = link;
+      qrBox.style.display='block';
+    }
+
+    function doSearch(){
+      const numero = $('#numero').value;
+      const chave = $('#chave').value;
+      const rec = findProto(numero, chave);
+      if(rec) renderResult(rec); else {
+        renderResult(null);
+        const box = $('#resultado');
+        box.innerHTML = `<div class="card"><div class="muted">Nenhum protocolo encontrado com os dados informados.</div></div>`;
+      }
+      const url = new URL(location.href);
+      url.searchParams.set('n', numero.trim());
+      url.searchParams.set('k', chave.trim());
+      history.replaceState({}, '', url);
+    }
+
+    function fromURL(){
+      const url = new URL(location.href);
+      const n = url.searchParams.get('n')||'';
+      const k = url.searchParams.get('k')||'';
+      if(n) $('#numero').value = n;
+      if(k) $('#chave').value = k;
+      if(n && k) doSearch();
+    }
+
+    $('#btnBuscar').addEventListener('click', doSearch);
+    $('#btnLimpar').addEventListener('click', ()=>{ $('#numero').value=''; $('#chave').value=''; history.replaceState({},'', location.pathname); renderResult(null); });
+    $('#btnLink').addEventListener('click', ()=>{
+      const url = new URL(location.href);
+      const n=$('#numero').value.trim(), k=$('#chave').value.trim();
+      if(n) url.searchParams.set('n', n); if(k) url.searchParams.set('k', k);
+      navigator.clipboard?.writeText(url.toString());
+      alert('Link copiado!');
+    });
+
+    $('#numero').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); doSearch(); }});
+    $('#chave').addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); doSearch(); }});
+
+    fromURL();
+  </script>
+</body>
+</html>
